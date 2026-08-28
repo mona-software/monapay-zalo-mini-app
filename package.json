@@ -1,0 +1,26 @@
+{
+  "name": "monapay-zalo-mini-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scaffold Zalo Mini App thu tien qua MONA Pay",
+  "scripts": {
+    "start": "zmp start",
+    "build": "zmp build",
+    "deploy": "zmp deploy",
+    "backend": "node backend/server.js"
+  },
+  "dependencies": {
+    "qrcode.react": "^4.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-router-dom": "^6.28.0",
+    "zmp-sdk": "^2.3.0",
+    "zmp-ui": "^1.11.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.6.0",
+    "zmp-cli": "^3.1.0"
+  }
+}
