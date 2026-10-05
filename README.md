@@ -1,28 +1,33 @@
 # MONA Pay Zalo Mini App
 
-Scaffold ZMP + React có ba màn:
+A Zalo Mini App (ZMP + React) with a small Node.js backend proxy that lets a merchant create VietQR payment codes and view recent MONA Pay transactions from inside Zalo.
 
-1. **Tạo QR thu tiền**: nhập mã đơn, số tiền, nội dung; backend tạo QR và app render VietQR.
-2. **Giao dịch**: lấy 50 giao dịch gần nhất theo số VA.
-3. **Cấu hình**: lưu thông tin merchant/VA không nhạy cảm trên thiết bị và kiểm tra trạng thái proxy.
+The app has three screens:
 
-Username, password, Bearer token và `X-Client-Secret` không bao giờ đi vào bundle Mini App. `backend/server.js` là proxy Node.js 18+ zero-dependency, tự login/cache token và chỉ cho phép origin đã cấu hình.
+1. **Create QR**: enter an order ID, amount and description; the backend creates the QR and the app renders the VietQR code.
+2. **Transactions**: loads the 50 most recent transactions of a virtual account (VA).
+3. **Settings**: stores non-sensitive merchant/VA settings on the device and checks the proxy status.
 
-## Điều kiện từ Mon
+Username, password, Bearer token and `X-Client-Secret` never enter the Mini App bundle. `backend/server.js` is a dependency-free Node.js 18+ proxy that logs in, caches the token and accepts requests only from the configured origin.
 
-Mon cần có tài khoản **Zalo Developers**, tạo Mini App tại cổng Zalo Developers, lấy App ID và hoàn tất các bước xét duyệt/quyền cần thiết. Scaffold không thể tự đăng ký hoặc publish thay tài khoản doanh nghiệp.
+## Requirements
 
-## Chạy local
+- Node.js 18 or later.
+- A Zalo Developers account with a Mini App created in the Zalo Developers portal (App ID, permissions and review are handled there).
+- A MONA Pay account with a client secret for creating QR codes.
 
-Không có package nào được cài sẵn trong scaffold. Khi chuẩn bị trên máy có package cache/mạng phù hợp:
+## Install
 
 ```bash
-cd devtools/zalo-mini-app
+git clone https://github.com/mona-software/monapay-zalo-mini-app.git
+cd monapay-zalo-mini-app
 npm install
 cp backend/.env.example backend/.env
 ```
 
-`backend/server.js` đọc biến môi trường trực tiếp; Node không tự nạp file `.env`. Export các biến hoặc dùng secret manager của nền tảng chạy backend:
+## Quick start
+
+`backend/server.js` reads environment variables directly; Node does not load `.env` on its own. Export the variables (or use your platform's secret manager), then start the proxy:
 
 ```bash
 export MONAPAY_USERNAME='...'
@@ -32,21 +37,51 @@ export ALLOWED_ORIGIN='http://localhost:3000'
 npm run backend
 ```
 
-Sau đó chạy `npm start`. Local mặc định gọi `http://localhost:8787`. Khi build thật, inject trước khi app mount:
+In another terminal, start the Mini App:
+
+```bash
+npm start
+```
+
+Open **Settings** in the app, enter the merchant settings (owner number, owner type, merchant ID, terminal ID, VA prefix, beneficiary name and the VA number to view) and check that the proxy reports ready.
+
+## Configuration
+
+### Backend proxy
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `PORT` | `8787` | Port the proxy listens on |
+| `MONAPAY_BASE_URL` | `https://api.monapay.vn` | MONA Pay API base URL |
+| `MONAPAY_USERNAME`, `MONAPAY_PASSWORD` | none | MONA Pay login, required |
+| `MONAPAY_CLIENT_SECRET` | none | Required for creating QR codes |
+| `ALLOWED_ORIGIN` | `http://localhost:3000` | The only origin allowed by CORS |
+
+Endpoints:
+
+| Method and path | Purpose |
+| --- | --- |
+| `GET /health` | Reports whether the credentials are set, and the base URL |
+| `POST /api/qr` | Creates a dynamic VietQR |
+| `GET /api/transactions?virtual_account_number=...&page=1&limit=50` | Lists transactions (limit up to 100) |
+
+### Mini App
+
+The app calls `http://localhost:8787` by default. For a real build, set the proxy URL before the app mounts:
 
 ```html
 <script>window.MONAPAY_PROXY_URL = 'https://proxy.example.com';</script>
 ```
 
-Backend production phải dùng HTTPS và `ALLOWED_ORIGIN` chính xác, không để `*`. CORS không thay thế xác thực: trước khi public, Mon cần đặt proxy sau lớp xác thực/rate-limit của hạ tầng hoặc bổ sung bước kiểm access token Zalo theo cấu hình Mini App đã duyệt. Chỉ lưu credential trong secret manager, không commit `.env`.
-
 ## Deploy
 
-1. Deploy backend proxy lên hạ tầng của MONA, cấu hình năm biến trong `backend/.env.example`.
-2. Điền URL HTTPS proxy vào bootstrap của Mini App.
-3. Chạy `npm run build`, kiểm tra trên Zalo Mini App Simulator và thiết bị thật.
-4. Mon đăng nhập Zalo Developers, khai báo domain/quyền, nộp phiên bản để xét duyệt rồi publish.
+1. Deploy the backend proxy over HTTPS with the variables above. Set `ALLOWED_ORIGIN` to the exact origin, never `*`.
+2. Put the proxy's HTTPS URL into the Mini App bootstrap.
+3. Run `npm run build` and test in the Zalo Mini App Simulator and on a device.
+4. In Zalo Developers, declare the domain and permissions, submit the version for review, then publish (`npm run deploy` uses `zmp deploy`).
 
-Không dùng tài khoản test production để tạo QR thật trong lúc smoke test. Tài liệu: https://monapay.vn/docs · llms: https://monapay.vn/llms.txt · Hotline 1900 636 648 · info@themona.global
+CORS is not authentication. Before going public, put the proxy behind your infrastructure's authentication and rate limiting, or add a check of the Zalo access token. Keep credentials in a secret manager and never commit `.env`. Do not create real QR codes with a production account during smoke tests.
 
-**MONA Pay thuộc bộ MONA Cloud của The MONA Group.**
+Documentation: https://monapay.vn/docs
+
+**MONA Pay is part of MONA Cloud by The MONA Group.**
