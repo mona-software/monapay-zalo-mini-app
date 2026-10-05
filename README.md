@@ -48,3 +48,5 @@ Backend production phải dùng HTTPS và `ALLOWED_ORIGIN` chính xác, không �
 4. Mon đăng nhập Zalo Developers, khai báo domain/quyền, nộp phiên bản để xét duyệt rồi publish.
 
 Không dùng tài khoản test production để tạo QR thật trong lúc smoke test. Tài liệu: https://monapay.vn/docs · llms: https://monapay.vn/llms.txt · Hotline 1900 636 648 · info@themona.global
+
+**MONA Pay thuộc bộ MONA Cloud của The MONA Group.**
